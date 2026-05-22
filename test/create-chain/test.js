@@ -161,6 +161,60 @@ test('conditional chains preserve root macro and meta access when skipped', t =>
 	t.is(chain.runIf(false).meta, chain.meta);
 });
 
+test('before.and.after() registers matching before and after.always hooks', t => {
+	const {calls, chain} = createTestChain();
+	const implementation = () => {};
+
+	chain.before.and.after('cleanup', implementation);
+
+	t.deepEqual(calls.map(call => call.metadata), [
+		{type: 'before'},
+		{type: 'after', always: true},
+	]);
+	t.deepEqual(calls.map(call => call.arguments_), [
+		['cleanup', implementation],
+		['cleanup', implementation],
+	]);
+});
+
+test('beforeEach.and.after() registers beforeEach and after.always hooks', t => {
+	const {calls, chain} = createTestChain();
+	const implementation = () => {};
+
+	chain.beforeEach.and.after('cleanup', implementation);
+
+	t.deepEqual(calls.map(call => call.metadata), [
+		{type: 'beforeEach'},
+		{type: 'after', always: true},
+	]);
+});
+
+test('beforeEach.and.afterEach() registers beforeEach and afterEach.always hooks', t => {
+	const {calls, chain} = createTestChain();
+	const implementation = () => {};
+
+	chain.beforeEach.and.afterEach('cleanup', implementation);
+
+	t.deepEqual(calls.map(call => call.metadata), [
+		{type: 'beforeEach'},
+		{type: 'afterEach', always: true},
+	]);
+});
+
+test('serial before/after chain preserves serial metadata', t => {
+	const {calls, chain} = createTestChain();
+
+	chain.serial.before.and.after(() => {});
+	chain.serial.beforeEach.and.afterEach(() => {});
+
+	t.deepEqual(calls.map(call => call.metadata), [
+		{type: 'before', serial: true},
+		{type: 'after', serial: true, always: true},
+		{type: 'beforeEach', serial: true},
+		{type: 'afterEach', serial: true, always: true},
+	]);
+});
+
 test('skip state is irreversible: runIf(true) cannot undo a prior skipIf(true)', t => {
 	const {calls, chain} = createTestChain();
 
