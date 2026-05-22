@@ -86,7 +86,7 @@ export type TestFn<Context = unknown> = {
 	after: AfterFn<Context>;
 	afterEach: AfterFn<Context>;
 	before: BeforeFn<Context>;
-	beforeEach: BeforeFn<Context>;
+	beforeEach: BeforeEachFn<Context>;
 	failing: FailingFn<Context>;
 	macro: MacroFn<Context>;
 	meta: Meta;
@@ -134,7 +134,7 @@ export type AlwaysInterface<Context = unknown> = {
 	skip: HookSkipFn<Context>;
 };
 
-export type BeforeFn<Context = unknown> = {
+type BeforeHookDeclaration<Context = unknown> = {
 	/**
 	 * Declare a hook that is run once, before all tests.
 	 * Additional arguments are passed to the implementation or macro.
@@ -146,8 +146,46 @@ export type BeforeFn<Context = unknown> = {
 	 * Additional arguments are passed to the implementation or macro.
 	 */
 	<Args extends unknown[]>(implementation: Implementation<Args, Context>, ...args: Args): void;
+};
 
+export type BeforeFn<Context = unknown> = BeforeHookDeclaration<Context> & {
+	and: BeforeAndFn<Context>;
 	skip: HookSkipFn<Context>;
+};
+
+export type BeforeEachFn<Context = unknown> = BeforeHookDeclaration<Context> & {
+	and: BeforeEachAndFn<Context>;
+	skip: HookSkipFn<Context>;
+};
+
+export type BeforeAndFn<Context = unknown> = {
+	/**
+	 * Declare matching hooks that run once before all tests and once after all tests are done.
+	 * The after hook always runs once tests and other hooks complete.
+	 */
+	after: HookPairFn<Context>;
+};
+
+export type BeforeEachAndFn<Context = unknown> = BeforeAndFn<Context> & {
+	/**
+	 * Declare matching hooks that run before and after each test.
+	 * The afterEach hook always runs once the test and other hooks complete.
+	 */
+	afterEach: HookPairFn<Context>;
+};
+
+export type HookPairFn<Context = unknown> = {
+	/**
+	 * Declare matching setup and cleanup hooks.
+	 * Additional arguments are passed to both hook implementations or macros.
+	 */
+	<Args extends unknown[]>(title: string, implementation: Implementation<Args, Context>, ...args: Args): void;
+
+	/**
+	 * Declare matching setup and cleanup hooks.
+	 * Additional arguments are passed to both hook implementations or macros.
+	 */
+	<Args extends unknown[]>(implementation: Implementation<Args, Context>, ...args: Args): void;
 };
 
 export type FailingFn<Context = unknown> = {
@@ -208,7 +246,7 @@ export type SerialFn<Context = unknown> = {
 	after: AfterFn<Context>;
 	afterEach: AfterFn<Context>;
 	before: BeforeFn<Context>;
-	beforeEach: BeforeFn<Context>;
+	beforeEach: BeforeEachFn<Context>;
 	failing: FailingFn<Context>;
 	only: OnlyFn<Context>;
 	/** Declare a test that only runs when `condition` is true; otherwise the test is skipped. */
