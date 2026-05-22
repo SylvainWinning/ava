@@ -228,6 +228,22 @@ test('title', t => {
 });
 ```
 
+For cleanup that should run before and after tests, you can declare matching hooks with `test.before.and.after()`. This registers both a `before()` hook and an `after.always()` hook with the same implementation:
+
+```js
+test.before.and.after('reset database', async () => {
+	await resetDatabase();
+});
+```
+
+Use `test.beforeEach.and.afterEach()` to run the same cleanup before and after each test. The after hook is registered as `afterEach.always()` so it runs even when the test or other hooks fail:
+
+```js
+test.beforeEach.and.afterEach('remove temporary files', () => {
+	removeTemporaryFiles();
+});
+```
+
 Hooks can be synchronous or asynchronous, just like tests. To make a hook asynchronous return a promise or observable, or use an async function.
 
 ```js
